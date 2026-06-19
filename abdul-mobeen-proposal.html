@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify Store Rescue — Abdul Mobeen</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:        #06080b;
+  --bg2:       #0c0f14;
+  --line:      rgba(255,255,255,0.07);
+  --accent:    #5bffc8;
+  --accent2:   #3de8ff;
+  --glow:      rgba(91,255,200,0.12);
+  --glow2:     rgba(61,232,255,0.08);
+  --text:      #d4d9e4;
+  --muted:     #606878;
+  --white:     #ffffff;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* ── CANVAS ── */
+#orb-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── LAYOUT ── */
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 20px 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: rgba(6,8,11,0.7);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 10px 28px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.nav-dot {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+.nav-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--white);
+  letter-spacing: 0.3px;
+}
+
+.nav-tag {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+.nav-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(91,255,200,0.3);
+  padding: 6px 16px;
+  border-radius: 100px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 140px 0 80px;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 36px;
+  opacity: 0;
+  animation: slideIn 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.1s;
+}
+
+.hero-tag-line {
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.hero-h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(48px, 8vw, 88px);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: -2px;
+  color: var(--white);
+  margin-bottom: 8px;
+  opacity: 0;
+  animation: slideIn 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.25s;
+}
+
+.hero-h1-italic {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-h1-b {
+  display: block;
+  font-size: clamp(44px, 7.5vw, 82px);
+  opacity: 0;
+  animation: slideIn 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.4s;
+}
+
+.hero-sub {
+  font-size: 17px;
+  color: var(--muted);
+  max-width: 480px;
+  margin: 36px 0 48px;
+  line-height: 1.75;
+  opacity: 0;
+  animation: slideIn 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.55s;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  opacity: 0;
+  animation: slideIn 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.7s;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--accent);
+  color: #000;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  padding: 15px 28px;
+  border-radius: 6px;
+  transition: all 0.25s;
+  box-shadow: 0 0 30px rgba(91,255,200,0.2);
+}
+
+.btn-primary:hover {
+  background: #fff;
+  box-shadow: 0 0 50px rgba(91,255,200,0.35);
+  transform: translateY(-2px);
+}
+
+.hero-note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.hero-note span {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ── HERO STATS ── */
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 80px;
+  padding-top: 48px;
+  border-top: 1px solid var(--line);
+  opacity: 0;
+  animation: slideIn 0.8s cubic-bezier(0.22,1,0.36,1) forwards 0.85s;
+}
+
+.stat-val {
+  font-family: 'Fraunces', serif;
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-val em {
+  color: var(--accent);
+  font-style: normal;
+}
+
+.stat-lbl {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+/* ── REVEAL ── */
+.r {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.75s cubic-bezier(0.22,1,0.36,1),
+              transform 0.75s cubic-bezier(0.22,1,0.36,1);
+}
+.r.on { opacity: 1; transform: none; }
+.r.d1 { transition-delay: 0.05s; }
+.r.d2 { transition-delay: 0.12s; }
+.r.d3 { transition-delay: 0.19s; }
+.r.d4 { transition-delay: 0.26s; }
+
+/* ── SECTION WRAPPER ── */
+.s {
+  padding: 100px 0;
+}
+
+.s-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+
+.s-eyebrow::before {
+  content: '';
+  width: 16px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.s-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(30px, 4.5vw, 48px);
+  font-weight: 300;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+
+.s-title em { font-style: italic; color: var(--accent); }
+
+.s-body {
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 540px;
+  line-height: 1.8;
+}
+
+/* ── OFFER CARD ── */
+.offer-wrap {
+  margin-top: 48px;
+  background: linear-gradient(135deg, rgba(91,255,200,0.06) 0%, rgba(61,232,255,0.03) 100%);
+  border: 1px solid rgba(91,255,200,0.2);
+  border-radius: 16px;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.offer-wrap::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(91,255,200,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.offer-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+}
+
+.offer-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--white);
+  margin-bottom: 14px;
+  letter-spacing: -0.5px;
+}
+
+.offer-body {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.75;
+  max-width: 560px;
+}
+
+/* ── STEPS ── */
+.steps {
+  margin-top: 56px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.step {
+  background: var(--bg2);
+  padding: 36px 32px;
+  position: relative;
+  transition: background 0.25s;
+}
+
+.step:hover { background: #111620; }
+
+.step-num {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--accent);
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.step-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ── PROJECTS ── */
+.projects {
+  margin-top: 52px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.proj {
+  display: block;
+  text-decoration: none;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 30px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  group: true;
+}
+
+.proj::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(91,255,200,0.04), transparent);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.proj:hover {
+  border-color: rgba(91,255,200,0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(91,255,200,0.1);
+}
+
+.proj:hover::after { opacity: 1; }
+
+.proj-arrow {
+  position: absolute;
+  top: 24px; right: 24px;
+  width: 28px; height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.proj:hover .proj-arrow {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.proj:hover .proj-arrow svg { stroke: #000; }
+
+.proj-arrow svg {
+  width: 12px; height: 12px;
+  stroke: var(--muted);
+  transition: stroke 0.25s;
+}
+
+.proj-name {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--white);
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+
+.proj-url {
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.2px;
+}
+
+/* ── CONFIRMATION ── */
+.confirm-box {
+  margin-top: 48px;
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.confirm-line {
+  height: 100%;
+  background: linear-gradient(to bottom, var(--accent), var(--accent2));
+  border-radius: 2px;
+  min-height: 80px;
+}
+
+.confirm-inner {}
+
+.confirm-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.confirm-text {
+  font-size: 16px;
+  color: var(--text);
+  line-height: 1.75;
+}
+
+/* ── QUESTION ── */
+.question-box {
+  margin-top: 48px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.question-box::before {
+  content: '"';
+  position: absolute;
+  top: -20px; left: 32px;
+  font-family: 'Fraunces', serif;
+  font-size: 160px;
+  color: rgba(91,255,200,0.05);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.question-icon {
+  width: 48px; height: 48px;
+  background: var(--glow);
+  border: 1px solid rgba(91,255,200,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.question-icon svg {
+  width: 20px; height: 20px;
+  stroke: var(--accent);
+}
+
+.question-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.question-text {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--white);
+  line-height: 1.5;
+  letter-spacing: -0.3px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* ── CTA SECTION ── */
+.cta-section {
+  padding: 80px 0 120px;
+  text-align: center;
+}
+
+.cta-glow-ring {
+  width: 1px; height: 1px;
+  margin: 0 auto 48px;
+  position: relative;
+}
+
+.cta-glow-ring::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(91,255,200,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 5vw, 60px);
+  font-weight: 300;
+  color: var(--white);
+  letter-spacing: -1.5px;
+  margin-bottom: 14px;
+  line-height: 1.05;
+}
+
+.cta-title em { font-style: italic; color: var(--accent); }
+
+.cta-sub {
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 40px;
+}
+
+.cta-sub span {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--accent);
+  color: #000;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 18px 36px;
+  border-radius: 8px;
+  letter-spacing: 0.2px;
+  transition: all 0.25s;
+  box-shadow: 0 0 40px rgba(91,255,200,0.25), 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.btn-cta:hover {
+  background: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 0 60px rgba(91,255,200,0.35), 0 16px 48px rgba(0,0,0,0.5);
+}
+
+.btn-cta svg {
+  width: 16px; height: 16px;
+}
+
+/* ── FOOTER LINE ── */
+.foot {
+  border-top: 1px solid var(--line);
+  padding: 28px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.foot a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ── KEYFRAMES ── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .wrap { padding: 0 20px; }
+  .steps { grid-template-columns: 1fr; }
+  .projects { grid-template-columns: 1fr; }
+  .hero-stats { gap: 28px; flex-wrap: wrap; }
+  .nav-tag { display: none; }
+  .offer-wrap, .question-box { padding: 32px 24px; }
+  .step { padding: 28px 24px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="orb-canvas"></canvas>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-dot"></div>
+    <span class="nav-name">Abdul Mobeen</span>
+    <span class="nav-tag">Shopify Developer</span>
+    <a href="https://www.upwork.com/freelancers/~01ac0ddd2a7eb2bed8" target="_blank" class="nav-link">Upwork Profile</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-tag">
+      <span class="hero-tag-line"></span>
+      Shopify Store Rescue Proposal
+    </p>
+    <h1 class="hero-h1">
+      Your store deserves<br>
+      <em class="hero-h1-italic">better than</em>
+    </h1>
+    <span class="hero-h1 hero-h1-b" style="font-family:'Fraunces',serif;font-weight:300;letter-spacing:-2px;">what it got.</span>
+
+    <p class="hero-sub">
+      Not a patch job. A proper page-by-page rebuild with clean structure, smart product flow, and a layout that actually converts.
+    </p>
+
+    <div class="hero-actions">
+      <a href="https://www.upwork.com/freelancers/~01ac0ddd2a7eb2bed8" target="_blank" class="btn-primary">
+        View Upwork Profile
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2.5 7h9M8 3l4 4-4 4"/>
+        </svg>
+      </a>
+      <p class="hero-note">Free audit within <span>24 hours</span> of access</p>
+    </div>
+
+    <div class="hero-stats">
+      <div>
+        <p class="stat-val">6<em>+</em></p>
+        <p class="stat-lbl">Years on Shopify</p>
+      </div>
+      <div>
+        <p class="stat-val">4</p>
+        <p class="stat-lbl">Live stores below</p>
+      </div>
+      <div>
+        <p class="stat-val">24<em>hr</em></p>
+        <p class="stat-lbl">Free audit turnaround</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FREE OFFER -->
+  <section class="s">
+    <p class="r s-eyebrow">Free Offer</p>
+    <h2 class="r d1 s-title">Zero risk to <em>get started</em></h2>
+    <p class="r d2 s-body">No commitment. No upfront cost. Just clarity on what you are working with before you spend a dollar.</p>
+
+    <div class="r d3 offer-wrap">
+      <span class="offer-badge">Free &amp; Immediate</span>
+      <p class="offer-title">A full theme audit, delivered in 24 hours</p>
+      <p class="offer-body">
+        Send access to your current theme and new template. You will receive a clear breakdown of what is broken, what is usable, and an exact rebuild plan. No guesswork on your end before we begin.
+      </p>
+    </div>
+  </section>
+
+  <!-- APPROACH -->
+  <section class="s" style="padding-top:0;">
+    <p class="r s-eyebrow">Approach</p>
+    <h2 class="r d1 s-title">How the <em>rebuild</em> works</h2>
+
+    <div class="r d2 steps">
+      <div class="step">
+        <p class="step-num">One</p>
+        <p class="step-title">Audit the theme</p>
+        <p class="step-desc">Review your new template and existing store. Know exactly what stays and what goes before touching a single page.</p>
+      </div>
+      <div class="step">
+        <p class="step-num">Two</p>
+        <p class="step-title">Lock the structure</p>
+        <p class="step-desc">Navigation hierarchy, product categories, and pricing architecture settled before any page gets built.</p>
+      </div>
+      <div class="step">
+        <p class="step-num">Three</p>
+        <p class="step-title">Rebuild page by page</p>
+        <p class="step-desc">Every page built properly using your template. Polished layout, correct products, conversion-first presentation.</p>
+      </div>
+      <div class="step">
+        <p class="step-num">Four</p>
+        <p class="step-title">Self-check before handover</p>
+        <p class="step-desc">Every page reviewed internally before you see it. You should not be the one catching mistakes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PORTFOLIO -->
+  <section class="s" style="padding-top:0;">
+    <p class="r s-eyebrow">Portfolio</p>
+    <h2 class="r d1 s-title">Stores <em>built</em> and organized</h2>
+    <p class="r d2 s-body">Real stores, built from scratch. Clean structure, organized products, polished layouts.</p>
+
+    <div class="r d3 projects">
+      <a class="proj" href="https://half-bakd.com" target="_blank">
+        <div class="proj-arrow">
+          <svg viewBox="0 0 12 12" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+        </div>
+        <p class="proj-name">Half Bak'd</p>
+        <p class="proj-url">half-bakd.com</p>
+      </a>
+      <a class="proj" href="https://senbirdtea.com" target="_blank">
+        <div class="proj-arrow">
+          <svg viewBox="0 0 12 12" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+        </div>
+        <p class="proj-name">Senbird Tea</p>
+        <p class="proj-url">senbirdtea.com</p>
+      </a>
+      <a class="proj" href="https://atelierrmr.ca" target="_blank">
+        <div class="proj-arrow">
+          <svg viewBox="0 0 12 12" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+        </div>
+        <p class="proj-name">Atelier RMR</p>
+        <p class="proj-url">atelierrmr.ca</p>
+      </a>
+      <a class="proj" href="https://eureka-farms.com" target="_blank">
+        <div class="proj-arrow">
+          <svg viewBox="0 0 12 12" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+        </div>
+        <p class="proj-name">Eureka Farms</p>
+        <p class="proj-url">eureka-farms.com</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- CONFIRMATION -->
+  <section class="s" style="padding-top:0;">
+    <p class="r s-eyebrow">Confirmation</p>
+    <h2 class="r d1 s-title">On the <em>adult brand</em></h2>
+
+    <div class="r d2 confirm-box">
+      <div class="confirm-line"></div>
+      <div class="confirm-inner">
+        <p class="confirm-label">Follow-on project</p>
+        <p class="confirm-text">
+          Fully comfortable working on the adult toys brand. No hesitation, no issue. Happy to carry this relationship into the second build once the first store is delivered properly.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUESTION -->
+  <section class="s" style="padding-top:0;">
+    <p class="r s-eyebrow">Before We Start</p>
+    <h2 class="r d1 s-title">One <em>question</em></h2>
+
+    <div class="r d2 question-box">
+      <div class="question-icon">
+        <svg viewBox="0 0 20 20" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10" cy="10" r="8"/>
+          <path d="M10 11V10c1.5 0 2.5-0.8 2.5-2S11.5 6 10 6 7.5 6.8 7.5 8"/>
+          <circle cx="10" cy="13.5" r="0.5" fill="currentColor"/>
+        </svg>
+      </div>
+      <p class="question-label">Discovery Question</p>
+      <p class="question-text">
+        Do you want navigation and category architecture locked in first, or build page by page and let the structure emerge naturally as we go?
+      </p>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section r">
+    <div class="cta-glow-ring"></div>
+    <h2 class="cta-title">Ready to <em>fix this</em><br>properly?</h2>
+    <p class="cta-sub">Reply today and I will review your theme within <span>24 hours</span>.</p>
+    <a href="https://www.upwork.com/freelancers/~01ac0ddd2a7eb2bed8" target="_blank" class="btn-cta">
+      Hire Abdul on Upwork
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 8h10M9 4l4 4-4 4"/>
+      </svg>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="foot r">
+    <span>Abdul Mobeen &mdash; Shopify Developer</span>
+    <a href="https://www.upwork.com/freelancers/~01ac0ddd2a7eb2bed8" target="_blank">upwork.com/freelancers/~01ac0ddd2a7eb2bed8</a>
+  </div>
+
+</div>
+
+<script>
+/* ── ORB CANVAS ── */
+const C = document.getElementById('orb-canvas');
+const ctx = C.getContext('2d');
+let W, H;
+
+function resize() {
+  W = C.width  = window.innerWidth;
+  H = C.height = window.innerHeight;
+}
+
+resize();
+window.addEventListener('resize', resize);
+
+const orbs = [
+  { x: 0.15, y: 0.2,  r: 0.28, c: [91,255,200],  vx: 0.00015, vy: 0.00008,  a: 0.07 },
+  { x: 0.85, y: 0.55, r: 0.22, c: [61,232,255],   vx: -0.0001, vy: 0.00012,  a: 0.05 },
+  { x: 0.5,  y: 0.85, r: 0.18, c: [91,255,200],   vx: 0.00008, vy: -0.00015, a: 0.04 },
+];
+
+let t = 0;
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  t += 1;
+
+  for (const o of orbs) {
+    const ox = ((o.x + Math.sin(t * o.vx * 500) * 0.08) * W);
+    const oy = ((o.y + Math.cos(t * o.vy * 500) * 0.08) * H);
+    const r  = o.r * Math.min(W, H);
+
+    const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, r);
+    g.addColorStop(0,   `rgba(${o.c},${o.a})`);
+    g.addColorStop(0.5, `rgba(${o.c},${o.a * 0.4})`);
+    g.addColorStop(1,   `rgba(${o.c},0)`);
+
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(ox, oy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ── SCROLL REVEAL ── */
+const els = document.querySelectorAll('.r');
+const io  = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.08 });
+
+els.forEach(el => io.observe(el));
+</script>
+</body>
+</html>
